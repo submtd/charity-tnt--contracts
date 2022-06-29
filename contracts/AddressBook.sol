@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+
+import "./BaseContract.sol";
+
+
+/**
+ * @title Address Book
+ * @author Steve Harmeyer
+ * @notice This contract stores important addresses.
+ */
+
+/// @custom:security-contact security@tntswap.io
+contract AddressBook is BaseContract
+{
+    /**
+     * Contract initializer.
+     * @dev This intializes all the parent contracts.
+     */
+    function initialize() initializer public
+    {
+        __BaseContract_init();
+    }
+
+    /**
+     * Address book mapping.
+     */
+    mapping(string => address) private _addressBook;
+
+    /**
+     * Set address.
+     * @param name_ Address name.
+     * @param address_ Address.
+     * @dev Stores an address in the address book.
+     */
+    function set(string memory name_, address address_) external onlyOwner
+    {
+        _addressBook[name_] = address_;
+    }
+
+    /**
+     * Unset address.
+     * @param name_ Address name.
+     * @dev Removes an address from the address book.
+     */
+    function unset(string memory name_) external onlyOwner
+    {
+        delete _addressBook[name_];
+    }
+
+    /**
+     * Get address.
+     * @param name_ Address name.
+     * @return address Address.
+     * @dev Returns an address stored in the address book.
+     */
+    function get(string memory name_) external view returns (address)
+    {
+        return _addressBook[name_];
+    }
+}
