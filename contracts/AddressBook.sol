@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./BaseContract.sol";
-
-
-/**
- * @title Address Book
- * @author Steve Harmeyer
- * @notice This contract stores important addresses.
- */
+import "./abstracts/BaseContract.sol";
 
 /// @custom:security-contact security@tntswap.io
 contract AddressBook is BaseContract

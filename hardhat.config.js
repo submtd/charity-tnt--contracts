@@ -14,7 +14,16 @@ module.exports = {
     solidity: {
         compilers: [
             {
-                version: "0.8.4",
+                version: "0.5.16",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200,
+                    },
+                },
+            },
+            {
+                version: "0.6.6",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -32,7 +41,7 @@ module.exports = {
                 },
             },
             {
-                version: "0.6.6",
+                version: "0.8.4",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -43,32 +52,17 @@ module.exports = {
         ],
     },
     networks: {
-        rinkeby: {
-            url: process.env.RINKEBY_RPC_URL || '',
+        testnet: {
+            url: process.env.TESTNET_RPC_URL || '',
             accounts: accounts,
-            gasMultiplier: 3,
-            timeout: 600000,
-            addressBook: process.env.RINKEBY_ADDRESS_BOOK || '',
         },
-        bsctestnet: {
-            url: process.env.BSC_TESTNET_RPC_URL || '',
+        mainnet: {
+            url: process.env.MAINNET_RPC_URL || '',
             accounts: accounts,
-            gasMultiplier: 3,
-            timeout: 60000,
-        },
-        bsc: {
-            url: process.env.BSC_RPC_URL || '',
-            accounts: accounts,
-            gasMultiplier: 3,
-            timeout: 60000,
-        },
+        }
     },
     etherscan: {
-        apiKey: {
-            rinkeby: process.env.ETHERSCAN_API_KEY,
-            bsc: process.env.BSCSCAN_API_KEY,
-            bscTestnet: process.env.BSCSCAN_API_KEY,
-        },
+        apiKey: process.env.ETHERSCAN_API_KEY || '',
     },
     gasReporter: {
         enabled: true,
