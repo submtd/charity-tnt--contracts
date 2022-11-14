@@ -1,86 +1,92 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 import "./abstracts/BaseContract.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 
-/// @custom:security-contact security@tntswap.io
+/// @custom:security-contact security@tnt.io
 contract TNT is BaseContract, ERC20Upgradeable {
     /**
      * Contract initializer.
+     * @dev This intializes all the parent contracts.
      */
-    function initialize() initializer public
-    {
+    function initialize() public initializer {
         __BaseContract_init();
         __ERC20_init("TNT Token", "TNT");
-        canAddNewMinters = true;
-        mintingEnabled = true;
     }
 
     /**
-     * Minting properties.
+     * Total max supply of TNT.
+     * @dev Can not exceed 5b tokens.
      */
-    mapping(address => uint256) public minters;
-    bool public canAddNewMinters;
-    bool public mintingEnabled;
+    uint256 constant MAX_SUPPLY = 5000000000e18;
 
     /**
-     * Minting events.
+     * External contracts.
      */
-    event Mint(address indexed to, uint256 amount);
-    event MinterAdded(address indexed minter, uint256 remaining);
-    event MinterAddingDisabled();
-    event MintingDisabled();
+    address pair;
 
     /**
-     * -------------------------------------------------------------------------
-     * Minting.
-     * -------------------------------------------------------------------------
+     * Addresses that can swap.
      */
+    mapping(address => bool) private _canSwap;
+
+    /**
+     * Addresses that can mint.
+     */
+    mapping(address => bool) private _canMint;
+
+    /**
+     * _transfer override.
+     * @param from_ From address.
+     * @param to_ To address.
+     * @param amount_ Transfer amount.
+     * @dev This is overridden to prevent swaps through non-whitelisted contracts.
+     */
+    function _transfer(
+        address from_,
+        address to_,
+        uint256 amount_
+    ) internal override {
+        if(from_ == pair) require(_canSwap[to_], "TNT: No swaps from external contracts");
+        if(to_ == pair) require(_canSwap[from_], "TNT: No swaps from external contracts");
+        return super._transfer(from_, to_, amount_);
+    }
 
     /**
      * Mint.
-     * @param to_ Address to mint to.
-     * @param amount_ Amount to mint.
+     * @param to_ Token receiver address.
+     * @param quantity_ Quantity to mint.
+     * @dev Minting is limited to the pool contract which is used to create the
+     * initial liquidity pool, and the timelock contract which is used to trikle
+     * out tokens to team/early investors.
      */
-    function mint(address to_, uint256 amount_) external returns (bool)
-    {
-        require(mintingEnabled, "Minting is disabled.");
-        require(minters[msg.sender] >= amount_, "You are not allowed to mint tokens.");
-        minters[msg.sender] -= amount_;
-        _mint(to_, amount_);
-        emit Mint(to_, amount_);
-        return true;
+    function mint(address to_, uint256 quantity_) external onlyOwner {
+        super._mint(to_, quantity_);
     }
 
     /**
-     * Add minter.
-     * @param minter_ Address to add as minter.
-     * @param max_ Max tokens minter can mint.
+     * Setup.
+     * @dev Updates stored addresses.
      */
-    function addMinter(address minter_, uint256 max_) external onlyOwner
-    {
-        require(canAddNewMinters, "Adding new minters is disabled.");
-        minters[minter_] += max_;
-        emit MinterAdded(minter_, minters[minter_]);
+    function setup() public {
+        address _factory_ = addressBook.get("factory");
+        pair = IUniswapV2Factory(_factory_).getPair(
+            addressBook.get("payment"),
+            address(this)
+        );
+        address _swap_ = addressBook.get("swap");
+        address _pool_ = addressBook.get("pool");
+        address _timelock_ = addressBook.get("timelock");
+        if(_swap_ != address(0)) _canSwap[_swap_] = true;
+        if(_pool_ != address(0)) _canMint[_pool_] = true;
+        if(_timelock_ != address(0)) _canMint[_timelock_] = true;
     }
 
     /**
-     * Disable adding new minters.
+     * @dev Add whenNotPaused modifier to token transfer hooks.
      */
-    function disableAddingNewMinters() external onlyOwner
-    {
-        canAddNewMinters = false;
-        emit MinterAddingDisabled();
-    }
-
-    /**
-     * Disable minting.
-     */
-    function disableMinting() external onlyOwner
-    {
-        canAddNewMinters = false;
-        mintingEnabled = false;
-        emit MintingDisabled();
-    }
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override whenNotPaused {}
+    function _afterTokenTransfer(address from, address to, uint256 amount) internal override whenNotPaused {}
 }

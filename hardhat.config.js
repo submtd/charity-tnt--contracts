@@ -14,7 +14,7 @@ module.exports = {
     solidity: {
         compilers: [
             {
-                version: "0.5.16",
+                version: "0.4.25",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -23,7 +23,16 @@ module.exports = {
                 },
             },
             {
-                version: "0.6.6",
+                version: "0.8.4",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200,
+                    },
+                },
+            },
+            {
+                version: "0.8.12",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -41,7 +50,7 @@ module.exports = {
                 },
             },
             {
-                version: "0.8.4",
+                version: "0.6.6",
                 settings: {
                     optimizer: {
                         enabled: true,
@@ -51,15 +60,26 @@ module.exports = {
             },
         ],
     },
+    defaultNetwork: "testnet",
     networks: {
         testnet: {
             url: process.env.TESTNET_RPC_URL || '',
             accounts: accounts,
+            gasMultiplier: 3,
+            timeout: 600000,
         },
         mainnet: {
             url: process.env.MAINNET_RPC_URL || '',
             accounts: accounts,
-        }
+            gasMultiplier: 3,
+            timeout: 60000,
+        },
+        hardhat: {
+            forking: {
+                url: "https://eth-mainnet.g.alchemy.com/v2/at6o68t3K8QNwnEwx_yb8wNrUoUVqcCi",
+                blockNumber: 15522740,
+            },
+        },
     },
     etherscan: {
         apiKey: process.env.ETHERSCAN_API_KEY || '',
